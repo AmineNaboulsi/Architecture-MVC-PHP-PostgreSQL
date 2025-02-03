@@ -1,0 +1,14 @@
+{
+    "autoload": {
+        "psr-4": {
+            "App\\": "src/"
+        }
+    },
+    "authors": [
+        {
+            "name": "AmineNaboulsi",
+            "email": "naboulsiiamine@gmail.com"
+        }
+    ],
+    "require": {}
+}
