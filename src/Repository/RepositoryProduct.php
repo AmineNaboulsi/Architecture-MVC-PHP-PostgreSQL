@@ -1,9 +1,12 @@
 <?php
-namespace App\Controllers;
 
-class ProductController
-{
-    public function getProduct(){
+namespace App\Repository;
+use App\Config\DbConnection;
+
+class RepositoryProduct{
+
+    public function getProducts() {
+        $con = DbConnection::connect();
         return ['products' => [
             [
                 "id"=>64,
@@ -18,5 +21,7 @@ class ProductController
         ]
             ];
     }
+
 }
+
 ?>

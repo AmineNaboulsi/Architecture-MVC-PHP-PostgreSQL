@@ -1,7 +1,10 @@
 <?php
 namespace App\Routes;
+use Twig\Environment;
 use Twig\Loader\FilesystemLoader;
-use App\Controllers\ProductController;
+use Twig\TwigFunction;
+use App\Controller\ProductController;
+use App\Controller\UserController;
 class MainRoute{
 
     private string $method ;
@@ -14,8 +17,12 @@ class MainRoute{
         $this->uri = $_SERVER['REQUEST_URI'];
         $this->routes = [
             'GET'=>[
-                '/products' => [ProductController::class , 'getProduct']
-            ]
+                '/products' => [ProductController::class , 'getProduct'],
+            ],
+            'POST'=>[
+                '/signin' => [UserController::class , ''],
+                '/signup' => [UserController::class , ''],
+            ],
         ]  ;
     }
     public function disptach(){
@@ -23,12 +30,16 @@ class MainRoute{
         $twig = new \Twig\Environment($loader, [
             // 'cache' => realpath(__DIR__.'/../src/cache'),
         ]);
+        $twig->addFunction(new \Twig\TwigFunction('asset', function ($path) {
+            return sprintf( '/public/%s', ltrim($path, '/'));
+        }));
         $endpoint = "";
         if($_SERVER["REQUEST_URI"] =="/"){
             $endpoint =  "/index.twig";
         }else{
             $endpoint =  $_SERVER["REQUEST_URI"] . '.twig';
         }
+
         if(file_exists(realpath($_SERVER["DOCUMENT_ROOT"] . '/../') .'\src\templates' . $endpoint)){
             $data= [];
             if(isset($this->routes[$this->method][$this->uri])){
@@ -40,10 +51,9 @@ class MainRoute{
             }
             echo $twig->render($endpoint,$data);
         }else{
-            echo $twig->render('pagenotfound.twig', ['name' => 'amine', 'lastname' => 'naboulsi']);
+            echo $twig->render('pagenotfound.twig', ['message' => "Page Not Found 404"]);
         }
     }
-    
 }
 
 ?>

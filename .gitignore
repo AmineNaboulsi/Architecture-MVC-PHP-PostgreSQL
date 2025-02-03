@@ -6,3 +6,4 @@ compose.yml
 /node_modules/
 package-lock.json
 nginx.conf
+.idea
