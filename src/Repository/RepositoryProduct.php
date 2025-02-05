@@ -2,24 +2,21 @@
 
 namespace App\Repository;
 use App\Config\DbConnection;
+use App\Core\LogWriter;
 
 class RepositoryProduct{
 
     public function getProducts() {
         $con = DbConnection::connect();
-        return ['products' => [
-            [
-                "id"=>64,
-                "name"=>"test1",
-                "price"=>644,
-            ],
-            [
-                "id"=>7,
-                "name"=>"test2",
-                "price"=>6542,
-            ]
-        ]
-            ];
+        $sqlDataReaer = $con->prepare('SELECT * FROM Products');
+        if($sqlDataReaer->execute()){
+            $Data = $sqlDataReaer->fetchAll(\PDO::FETCH_ASSOC);
+            LogWriter::info("Display Products");
+            return ['status'=>true , 'products' => $Data];
+        }else{
+            LogWriter::error("Error To display products");
+            return ['status'=>false ,'message'=>'Error'  ];
+        }
     }
 
 }

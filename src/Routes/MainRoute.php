@@ -1,11 +1,9 @@
 <?php
 namespace App\Routes;
-use Twig\Environment;
-use Twig\Loader\FilesystemLoader;
-use Twig\TwigFunction;
-use App\Controller\ProductController;
-use App\Controller\UserController;
-class MainRoute{
+
+use App\Routes\Route;
+use App\Controller\TwigController;
+class MainRoute extends TwigController{
 
     private string $method ;
     private string $uri ;
@@ -13,46 +11,56 @@ class MainRoute{
 
     public function __construct()
     {
+        parent::__construct();
         $this->method = $_SERVER['REQUEST_METHOD']; 
         $this->uri = $_SERVER['REQUEST_URI'];
         $this->routes = [
-            'GET'=>[
-                '/products' => [ProductController::class , 'getProduct'],
-            ],
-            'POST'=>[
-                '/signin' => [UserController::class , ''],
-                '/signup' => [UserController::class , ''],
-            ],
-        ]  ;
+            'GET' => [] ,
+            'POST' => [] ,
+            'PUT' => [] ,
+            'DELETE' => [] ,
+            'PATCH' => [] ,
+        ];
     }
-    public function disptach(){
-        $loader = new FilesystemLoader(realpath($_SERVER["DOCUMENT_ROOT"] . '/../') .'\src\templates');
-        $twig = new \Twig\Environment($loader, [
-            // 'cache' => realpath(__DIR__.'/../src/cache'),
-        ]);
-        $twig->addFunction(new \Twig\TwigFunction('asset', function ($path) {
-            return sprintf( '/public/%s', ltrim($path, '/'));
-        }));
-        $endpoint = "";
-        if($_SERVER["REQUEST_URI"] =="/"){
-            $endpoint =  "/index.twig";
-        }else{
-            $endpoint =  $_SERVER["REQUEST_URI"] . '.twig';
-        }
+       //GET
+       public function get($uri , $controller,$method,$role=null,$parametres=[],$middleware=null)
+       { $this->routes['GET'][$uri] = new Route($uri , $controller,$method,$role,$parametres,$middleware);}
+       
+       //POST
+       public function post($uri , $controller,$method,$role=null,$parametres=[],$middleware=null)
+       { $this->routes['POST'][$uri] = new Route($uri , $controller,$method,$role,$parametres,$middleware);}
+       
+       //PUT
+       public function put($uri , $controller,$method,$role=null,$parametres=[],$middleware=null)
+       { $this->routes['PUT'][$uri] = new Route($uri , $controller,$method,$role,$parametres,$middleware);}
+   
+       //PATCH
+       public function patch($uri , $controller,$method,$role=null,$parametres=[],$middleware=null)
+       { $this->routes['PATCH'][$uri] = new Route($uri , $controller,$method,$role,$parametres,$middleware);}
+   
+       //DELETE
+       public function delete($uri , $controller,$method,$role=null,$parametres=[],$middleware=null)
+       { $this->routes['DELETE'][$uri] = new Route($uri , $controller,$method,$role,$parametres,$middleware);}
 
-        if(file_exists(realpath($_SERVER["DOCUMENT_ROOT"] . '/../') .'\src\templates' . $endpoint)){
-            $data= [];
-            if(isset($this->routes[$this->method][$this->uri])){
-                $route = $this->routes[$this->method][$this->uri];
-                $class = $route[0];
-                $method =$route[1];
+    public function disptach(){
+        $Found = false;
+        foreach ($this->routes[$this->method] as $route => $r) {
+            if($route == $this->uri ){
+                $class =  $r->controller;
+                $method =  $r->method;
                 $controller = new $class;
-                $data = $controller->$method();
+                if($r->middleware!=null){
+                    $middleware = new $r->middleware();
+                    $middleware->handle();
+                }
+                $request = [
+                    'params' => $_GET,
+                    'body' => json_decode(file_get_contents('php://input'), true) ?? $_POST
+                ];
+                return $controller->$method($request);
             }
-            echo $twig->render($endpoint,$data);
-        }else{
-            echo $twig->render('pagenotfound.twig', ['message' => "Page Not Found 404"]);
         }
+        if(!$Found) echo $this->twig->render('client/pagenotfound.twig', ['message' => "Page Not Found 404"]);
     }
 }
 
