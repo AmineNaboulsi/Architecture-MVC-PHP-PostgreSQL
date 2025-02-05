@@ -33,7 +33,7 @@ class TemplateController extends TwigController{
 
     #[Route(uri:'/signup', method: 'GET')]
     public function Signup(){
-        echo $this->twig->render('client/signup.twig', 
+        echo $this->Twig()->render('client/signup.twig', 
         [
             "SESSION" => $_SESSION 
         ]);
@@ -41,7 +41,7 @@ class TemplateController extends TwigController{
 
     #[Route(uri:'/', method: 'GET', role: 'client', middleware: 'AuthMiddleware::class')]
     public function Home(){
-        echo $this->twig->render('client/index.twig',[
+        echo $this->Twig()->render('client/index.twig',[
             "SESSION" => $_SESSION 
         ]);
     }
@@ -60,7 +60,7 @@ class TemplateController extends TwigController{
     }
 
 
-    #[Route(uri: '/dashboard', method: 'GET', role: 'client', middleware: 'AuthMiddleware::class')]
+    #[Route(uri: '/dashboard', method: 'GET', role: 'admin', middleware: 'AuthMiddleware::class')]
     public function Dashboard() {
         echo $this->twig->render('admin/dashborad.twig', 
         [

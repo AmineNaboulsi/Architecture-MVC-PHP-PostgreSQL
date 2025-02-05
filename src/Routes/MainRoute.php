@@ -36,10 +36,11 @@ class MainRoute extends TwigController{
     
             foreach ($reflectionClass->getMethods() as $method) {
                 $attributes = $method->getAttributes(Route::class);
-    
                 foreach ($attributes as $attribute) {
                     $route = $attribute->newInstance();
-    
+                    echo  '<prev>';
+                    print_r($route);
+                    echo  '</prev>';
                     $this->routes[$route->method][$route->uri] = [
                         'controller' => $controllerClass, 
                         'method' => $method->getName(),
