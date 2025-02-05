@@ -4,7 +4,15 @@ namespace App\Controller;
 use App\Controller\TwigController;
 use JWT;
 use App\Config\DbConnection;
-use App\Config\JwtHandler;
+use App\Routes\Route;
+//
+// $MainRoute->post(uri:'/login' ,controller:UserController::class, method:"Login" ,parametres:['email' , 'password']);
+// $MainRoute->post(uri:'/register' ,controller:UserController::class, method:"Register" ,parametres:['name', 'email' , 'password']);
+
+// $MainRoute->post(uri:'/product/add' ,controller:ProductController::class, method:"Save",role:'admin' ,middleware:AuthMiddleware::class);
+// $MainRoute->put(uri:'/product/update' ,controller:ProductController::class, method:"UpdateProduct",role:'admin',middleware:AuthMiddleware::class);
+// $MainRoute->delete(uri:'/product/delete' ,controller:ProductController::class, method:"DelProduct" ,role:'admin',middleware:AuthMiddleware::class);
+
 class UserController extends TwigController
 {
     public function __construct()
@@ -15,9 +23,9 @@ class UserController extends TwigController
         
         echo $this->twig->render('client/index.twig', []);
     }
-
+    #[Route(uri:'/login' , method: "POST" , )]
     public function Login($request) {
-        session_start();
+        
         $email = $request['body']['email'] ?? '';
         $password = $request['body']['password'] ?? '';
 
@@ -37,21 +45,18 @@ class UserController extends TwigController
             $_SESSION['message'] = "Invalid email or password.";
             return;
         }
-
         // if (!$user || !password_verify($password, $user['password'])) {
         //     http_response_code(401);
         //     echo json_encode(["error" => "Invalid email or password."]);
         //     return;
         // }
-
-        $payload = [
-            "id" => $user['id'],
-            "email" => $user['email'],
-            "exp" => time() + (60 * 60) 
-        ];
-
-        $jwt = JwtHandler::generateToken($payload);
-        header("Location:/"); 
+        $_SESSION['auth'] = true;
+        $_SESSION['role'] = $user['role'];
+        if($user['role'] == 'admin'){
+            header("Location:/dashborad"); 
+        }else{
+            header("Location:/"); 
+        }
     }
 }
 ?>

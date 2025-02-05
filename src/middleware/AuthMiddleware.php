@@ -8,20 +8,24 @@ use Exception;
 use Dotenv\Dotenv;
 class AuthMiddleware extends Middleware {
 
+    private $role;
+    public function __construct($role)
+    {
+        $this->role = $role;
+    }
     public function handle($request, $next) {
-        $headers = getallheaders();
-        
-        if (!isset($headers['Authorization'])) {
-            http_response_code(401);
-            echo json_encode(["error" => "Access denied. No token provided."]);
-            exit;
-        }
-
         try {
-
-            $request['user'] = (array) $decoded;
-            
-            return $next($request);
+            if(!isset($_SESSION['auth']) ||  $_SESSION['auth']==false){
+                header('location:signin');
+                return;
+            }
+            if($_SESSION['role'] == $this->role){
+                return $next($request);
+            }
+            else{
+                $_SESSION['message'] = 'Unauthorized access. Please log in.';
+                header('location: /authorization');
+            }
         } catch (Exception $e) {
             http_response_code(401);
             echo json_encode(["error" => "Invalid or expired token.", "details" => $e->getMessage()]);

@@ -3,6 +3,11 @@ namespace App\Routes;
 
 use App\Routes\Route;
 use App\Controller\TwigController;
+use App\Controller\ProductController;
+use App\Controller\UserController;
+use App\Controller\TemplateController;
+use App\Middleware\AuthMiddleware;
+
 class MainRoute extends TwigController{
 
     private string $method ;
@@ -22,42 +27,54 @@ class MainRoute extends TwigController{
             'PATCH' => [] ,
         ];
     }
-       //GET
-       public function get($uri , $controller,$method,$role=null,$parametres=[],$middleware=null)
-       { $this->routes['GET'][$uri] = new Route($uri , $controller,$method,$role,$parametres,$middleware);}
-       
-       //POST
-       public function post($uri , $controller,$method,$role=null,$parametres=[],$middleware=null)
-       { $this->routes['POST'][$uri] = new Route($uri , $controller,$method,$role,$parametres,$middleware);}
-       
-       //PUT
-       public function put($uri , $controller,$method,$role=null,$parametres=[],$middleware=null)
-       { $this->routes['PUT'][$uri] = new Route($uri , $controller,$method,$role,$parametres,$middleware);}
-   
-       //PATCH
-       public function patch($uri , $controller,$method,$role=null,$parametres=[],$middleware=null)
-       { $this->routes['PATCH'][$uri] = new Route($uri , $controller,$method,$role,$parametres,$middleware);}
-   
-       //DELETE
-       public function delete($uri , $controller,$method,$role=null,$parametres=[],$middleware=null)
-       { $this->routes['DELETE'][$uri] = new Route($uri , $controller,$method,$role,$parametres,$middleware);}
-
+    public function registerRoutes()
+    {
+        $controllerClassNames = [ProductController::class, UserController::class, TemplateController::class];
+    
+        foreach ($controllerClassNames as $controllerClass) {
+            $reflectionClass = new \ReflectionClass($controllerClass);
+    
+            foreach ($reflectionClass->getMethods() as $method) {
+                $attributes = $method->getAttributes(Route::class);
+    
+                foreach ($attributes as $attribute) {
+                    $route = $attribute->newInstance();
+    
+                    $this->routes[$route->method][$route->uri] = [
+                        'controller' => $controllerClass, 
+                        'method' => $method->getName(),
+                        'role' => $route->role,
+                        'middleware' => $route->middleware,
+                        'parametres' => $route->parametres,
+                    ];
+                }
+            }
+        }
+    }
+    
     public function disptach(){
         $Found = false;
         foreach ($this->routes[$this->method] as $route => $r) {
             if($route == $this->uri ){
-                $class =  $r->controller;
-                $method =  $r->method;
+                $class =  $r['controller'];
+                $method =  $r['method'];
+                $middleware =  new AuthMiddleware($r["role"]);
                 $controller = new $class;
-                if($r->middleware!=null){
-                    $middleware = new $r->middleware();
-                    $middleware->handle();
-                }
                 $request = [
                     'params' => $_GET,
                     'body' => json_decode(file_get_contents('php://input'), true) ?? $_POST
                 ];
-                return $controller->$method($request);
+                if($r['middleware'] !=null){
+                    $middleware->handle($request ,function () use ($class, $method) {
+                        $controller = new $class();
+                        return $controller->$method();
+                    });
+                    $Found= true;
+                    break;
+                }
+                $controller->$method($request);
+                $Found = true;
+                break;
             }
         }
         if(!$Found) echo $this->twig->render('client/pagenotfound.twig', ['message' => "Page Not Found 404"]);

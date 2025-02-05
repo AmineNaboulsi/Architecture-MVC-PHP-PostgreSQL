@@ -6,12 +6,14 @@ use App\Models\Categorie;
 class Product{
     
     /* Attribute declaration */
+    // #[Unique]
     private int $id_p;
     private string $name;
     private float $price;
     private string $description;
     private int $stock;
     private bool $projected;
+
     private string $img;
 
     /* Constrecteur declaration */

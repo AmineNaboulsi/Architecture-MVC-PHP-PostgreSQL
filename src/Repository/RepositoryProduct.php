@@ -12,10 +12,10 @@ class RepositoryProduct{
         if($sqlDataReaer->execute()){
             $Data = $sqlDataReaer->fetchAll(\PDO::FETCH_ASSOC);
             LogWriter::info("Display Products");
-            return ['status'=>true , 'products' => $Data];
+            return $Data;
         }else{
             LogWriter::error("Error To display products");
-            return ['status'=>false ,'message'=>'Error'  ];
+            return [];
         }
     }
 

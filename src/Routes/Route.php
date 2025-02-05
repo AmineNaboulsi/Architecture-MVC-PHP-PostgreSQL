@@ -1,6 +1,7 @@
 <?php
 namespace App\Routes;
 
+#[\Attribute(\Attribute::TARGET_METHOD)]
 class Route
 {
     public $uri;
@@ -10,10 +11,11 @@ class Route
     public $role;
     public $middleware;
 
-    public function __construct($uri,$controller,$method,$role,$parametres,$middleware)
+    public function __construct(
+        string $uri,string $method,string $role = null,
+        array  $parametres = [] ,?string  $middleware = null)
     {
         $this->uri = $uri;
-        $this->controller = $controller;
         $this->method = $method;
         $this->role = $role;
         $this->parametres = $parametres;
